@@ -1,0 +1,2 @@
+ANNOTATIONS
+	create a copy of the Daniel Hirsch video of youtube to understand the graphical engine

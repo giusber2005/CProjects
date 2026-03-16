@@ -1,0 +1,15 @@
+# Build artifacts
+build/
+*.o
+*.a
+*.out
+
+# Compiled binaries (no extension)
+projector/projector
+randomWalks/random-walk
+randomWalks/app
+
+# Editor
+.vscode/
+*.swp
+*~
