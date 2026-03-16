@@ -13,20 +13,45 @@ int main(int argc, const char *argv[]) {
     srand(time(NULL));
 
     int num_agents;
+    int num_clusters;
     if(argc == 1) {
         num_agents = 5;
     } else if(argc == 2) {
         num_agents = atoi(argv[1]);
+    } else if(argc == 3) {
+        num_clusters = atoi(argv[2]);
     } else {
-        printf("Usage: %s <num-of-agents>\n", argv[0]);
+        printf("Usage: %s <num-of-agents-per-cluster> <num-of-clusters>\n", argv[0]);
     }
 
-    int agents[num_agents];
-    int agentsPos[num_agents][2];
+    int dims = 0;
+    printf("In how many dimensions? ");
+    scanf("%i", &dims);
+    if (dims != 2 && dims != 3) {
+        printf("Dimensions can be 2 or 3");
+        return -1;
+    }
+
+    char answer;
+    bool sovrapposition = true;
+    printf("Do you accept sovrapposition (y/N)? ");
+    scanf("%c", &answer);
+    if (answer == 'y') {
+        sovrapposition = false;
+    }
+
+    int clustersPos[num_clusters][2];
+    for (int j = 0; j < num_clusters; j++) {
+        clustersPos[j][0] = rand() % (WIDTH - SPAWN_MARGIN);
+        clustersPos[j][0] = rand() % (HEIGHT - SPAWN_MARGIN);
+    }
+
+    int agents[num_agents * num_clusters];
+    int agentsPos[num_agents * num_clusters][2];
     for(int i = 0; i < num_agents; i++) {
         agents[i] = (rand() % POOL) + 1;
-        agentsPos[i][0] = WIDTH / 2;
-        agentsPos[i][1] = HEIGHT / 2;
+        agentsPos[i][0] = clustersPos[i % num_clusters][0];
+        agentsPos[i][1] = clustersPos[i % num_clusters][1];
     }
 
     uint8_t (*agentsColors)[4] = generate_colors(num_agents);
@@ -36,7 +61,6 @@ int main(int argc, const char *argv[]) {
 
     int app_running = 1;
     SDL_Event event;
-
     int frameCount = 0;
     while(app_running) {
         while(SDL_PollEvent(&event)) {
@@ -44,6 +68,8 @@ int main(int argc, const char *argv[]) {
                 app_running = 0;
             }
         }
+
+        draw_graph(renderer, dims);
 
         frameCount++;
 
