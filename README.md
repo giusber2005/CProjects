@@ -32,6 +32,27 @@ Defines `Phasor`, `Graph`, and `Func` structures that can be composed and render
 
 ---
 
+### [bouncingBalls](./bouncingBalls)
+SDL2 simulation where **clicking anywhere in the window spawns a ball** that launches upward with a randomised angle, then falls under gravity and bounces off every wall.
+
+A **side menu** (240 px panel) lets you control all parameters in real time:
+
+| Control | Range |
+|---|---|
+| **Gravity** | 50 – 2000 px/s² |
+| **Ball size** | 5 – 40 px |
+| **Bounce** (restitution) | 0.1 – 1.0 |
+| **Spawn speed** | 50 – 600 px/s |
+| **Shape** | Circle, Square, Triangle, Diamond, Pentagon |
+| **Color** | 8 colour swatches |
+
+Additional features: resizable window (simulation area scales automatically), CLEAR ALL button to reset, up to 500 simultaneous balls.
+
+**Dependencies:** SDL2, SDL2_gfx
+**Build:** `make` — **Run:** `make run`
+
+---
+
 ### [randomWalks](./randomWalks)
 SDL2 simulation of **random walk agents** starting from the center of a window and moving stochastically on a 2D grid.
 
@@ -66,6 +87,7 @@ The following folders are placeholders for future projects:
 | `Tessellations` | Tessellation patterns |
 | `Torrenting` | BitTorrent protocol exploration |
 | `Xrays` | X-ray image processing |
+| `Fractals` | Fractals visualizer |
 
 ---
 
@@ -73,4 +95,5 @@ The following folders are placeholders for future projects:
 
 - `gcc` (C11 or later)
 - `SDL2` — for graphical projects (`sudo apt install libsdl2-dev`)
+- `SDL2_gfx` — for shape rendering (`sudo apt install libsdl2-gfx-dev`)
 - `make`
