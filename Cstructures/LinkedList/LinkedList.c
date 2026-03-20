@@ -10,14 +10,12 @@ bool add_last_impl(LinkedList* self, int value) {
     newNode->value = value;
     newNode->next = NULL;
 
-    Node* pointer = self->head;
-    if (pointer == NULL) {
-        pointer = newNode;
+    if (self->tail == NULL) {
+	    self->tail = newNode;
+	    self->head = newNode;
     } else {
-        while (pointer->next != NULL) {
-            pointer = pointer->next;
-        }
-        pointer->next = newNode;
+	    self->tail->next = newNode;
+	    self->tail = newNode;
     }
 
     self->size++;
@@ -32,41 +30,31 @@ bool add_first_impl(LinkedList* self, int value) {
     }
 
     newNode->value = value;
-    newNode->next = NULL;
-
-    Node* pointer = self->head;
-    if (pointer == NULL) {
-        pointer = newNode;
-    } else {
-        self->head = newNode;
-        self->head->next = pointer;
-    }
+    newNode->next = self->head;
+    self->head = newNode;
 
     self->size++;
     return true;
 }
 
-int get_firstElement_impl(LinkedList* self) {
+bool get_firstElement_impl(LinkedList* self, int* value) {
     if (!self || self->size == 0) {
         printf("Linked list doesn't exist or it has a size equal to 0\n");
-        return NULL;
+        return false;
     }
 
-    return self->head->value;
+    *value = self->head->value;
+    return false;
 }
 
-int get_lastElement_impl(LinkedList* self) {
+bool get_lastElement_impl(LinkedList* self, int* value) {
     if (!self || self->size == 0) {
         printf("Linked list doesn't exist or it has a size equal to 0\n");
-        return NULL;
+        return false;
     }
 
-    Node* pointer = self->head;
-    while (pointer->next != NULL) {
-        pointer = pointer->next;
-    }
-
-    return pointer->value;
+    *value = self->tail->value;
+    return true;
 }
 
 bool get_element_impl(LinkedList* self, int index, int* value) {
@@ -83,7 +71,7 @@ bool get_element_impl(LinkedList* self, int index, int* value) {
     if (index < 0) {
         index = self->size + index;
     }
-
+    
     Node* pointer = self->head;
     int counter = 0;
     while (counter < index) {
@@ -96,8 +84,8 @@ bool get_element_impl(LinkedList* self, int index, int* value) {
 }
 
 bool index_of_impl(LinkedList* self, int value, int* index) {
-    if (!self || self->size == 0) {
-        printf("Linked list doesn't exist or it has a size equal to 0\n");
+    if (!self) {
+        printf("Linked list doesn't exist\n");
         return false;
     }
 
@@ -116,6 +104,11 @@ bool index_of_impl(LinkedList* self, int value, int* index) {
 }
 
 bool last_index_of_impl(LinkedList* self, int value, int* index) {
+    if (!self) {
+	    printf("Linked List doesn't exist!\n");
+	    return false;
+    }
+
     bool found = false;
     Node* pointer = self->head;
     int counter = 0;
@@ -127,12 +120,42 @@ bool last_index_of_impl(LinkedList* self, int value, int* index) {
         pointer = pointer->next;
         counter++;
     }
-    
-    if (!found) {
-        return false;
-    } else {
-        return true;
-    }
+
+    return found;
+}
+
+bool indexes_of_impl(LinkedList* self, int value, int** indexes) {
+	if (!self) {
+		printf("Linked List doesn't exist!\n");
+		return false;
+	}
+
+	bool found = false;
+	int* indexesPointer = NULL;
+	Node* listPointer = self->head;
+	int counter = 0;
+	int size = 0;
+	while (listPointer != NULL) {
+		if (listPointer->value == value) {
+			size++;
+			int* tmp = realloc(indexesPointer, sizeof(int)*size);
+			if (tmp == NULL) {
+				printf("Error during allocation for the indexesPointer in indexesOf\n");
+				free(indexesPointer);
+				return false;
+			}
+
+			indexesPointer = tmp;
+			indexesPointer[size - 1] = counter;
+			found = true;
+		}
+
+		counter++;
+		listPointer = listPointer->next;
+	}
+
+	*indexes = indexesPointer;
+	return found;
 }
 
 //TODO
@@ -228,13 +251,62 @@ int* to_list_impl(LinkedList* self) {
 
     Node* pointer = self->head;
     int counter = 0;
-    while (pointer->next != NULL) {
+    while (pointer != NULL) {
         list[counter] = pointer->value;
         pointer = pointer->next;
         counter++;
     }
 
     return list;
+}
+
+int* to_list_singleton_impl(LinkedList* self, int* singleton_size) {
+    if (!self || self->size == 0) {
+        printf("Linked list doesn't exist or it has a size equal to 0\n");
+        *singleton_size = 0;
+        return NULL;
+    }
+    int frequencies_size;
+    int* frequencies = self->get_frequencies(self, &frequencies_size);
+    if (!frequencies) {
+        *singleton_size = 0;
+        return NULL;
+    }
+
+    // First pass: count singletons
+    int count = 0;
+    for (int i = 0; i < frequencies_size; i++) {
+        if (frequencies[i * 2 + 1] == 1) {
+            count++;
+        }
+    }
+
+    if (count == 0) {
+        free(frequencies);
+        *singleton_size = 0;
+        return NULL;
+    }
+
+    int* list_singleton = (int*)malloc(sizeof(int) * count);
+    if (!list_singleton) {
+        printf("Error during the allocation of memory for the singleton list\n");
+        free(frequencies);
+        *singleton_size = 0;
+        return NULL;
+    }
+
+    // Second pass: copy singleton values
+    int index = 0;
+    for (int i = 0; i < frequencies_size; i++) {
+        if (frequencies[i * 2 + 1] == 1) {
+            list_singleton[index] = frequencies[i * 2];
+            index++;
+        }
+    }
+
+    free(frequencies);
+    *singleton_size = count;
+    return list_singleton;
 }
 
 int* to_list_unique_impl(LinkedList* self, int* unique_size) {
@@ -245,53 +317,38 @@ int* to_list_unique_impl(LinkedList* self, int* unique_size) {
     }
 
     int frequencies_size;
-    int* frequencies = self->get_frequencies(self, &frequencies_size);
-    
+    int* frequencies = self->get_frequencies(self, &frequencies_size);    
     if (!frequencies) {
         *unique_size = 0;
         return NULL;
     }
 
-    // First pass: count unique elements (frequency == 1)
-    int unique_count = 0;
-    for (int i = 0; i < frequencies_size; i++) {
-        if (frequencies[i * 2 + 1] == 1) {  // FIXED: check frequency, not value
-            unique_count++;
-        }
-    }
+   int* list_unique = (int*)malloc(sizeof(int) * frequencies_size);
+   if (!list_unique) {
+   	printf("Error during the allocation of memory for the unique list\n");
+   	free(frequencies);
+   	*unique_size = 0;
+   	return NULL;
+   }
 
-    // Allocate exact size needed (do it once, not in a loop)
-    int* list_unique = (int*)malloc(sizeof(int) * unique_count);
-    if (!list_unique) {
-        printf("Error during the allocation of memory for the unique list\n");
-        free(frequencies);
-        *unique_size = 0;
-        return NULL;
-    }
-
-    // Second pass: copy unique values
-    int index = 0;
-    for (int i = 0; i < frequencies_size; i++) {
-        if (frequencies[i * 2 + 1] == 1) {  // frequency == 1
-            list_unique[index] = frequencies[i * 2];  // copy the value
-            index++;
-        }
-    }
-
-    free(frequencies);  // FIXED: don't forget to free
-    *unique_size = unique_count;
-    return list_unique;
+   for (int i = 0; i < frequencies_size; i++) {
+	   list_unique[i] = frequencies[i * 2];
+   }
+	
+   free(frequencies);
+   *unique_size = frequencies_size;
+   return list_unique;
 }
 
-int max_impl(LinkedList* self) {
+bool max_impl(LinkedList* self, int* maxn) {
     if (!self || self->size == 0) {
         printf("Linked list doesn't exist or it has a size equal to 0\n");
-        return NULL;
+        return false;
     }
 
     int max = self->head->value;
     Node* pointer = self->head;
-    while (pointer->next != NULL) {
+    while (pointer != NULL) {
         if (pointer->value > max) {
             max = pointer->value;
         }
@@ -299,18 +356,19 @@ int max_impl(LinkedList* self) {
         pointer = pointer->next;
     }
 
-    return max;
+    *maxn = max;
+    return true;
 }
 
-int min_impl(LinkedList* self) {
+bool min_impl(LinkedList* self, int* minn) {
     if (!self || self->size == 0) {
         printf("Linked list doesn't exist or it has a size equal to 0\n");
-        return NULL;
+        return false;
     }
 
     int min = self->head->value;
     Node* pointer = self->head;
-    while (pointer->next != NULL) {
+    while (pointer != NULL) {
         if (pointer->value < min) {
             min = pointer->value;
         }
@@ -318,7 +376,8 @@ int min_impl(LinkedList* self) {
         pointer = pointer->next;
     }
 
-    return min;
+    *minn = min;
+    return true;
 }
 
 bool add_all_impl(LinkedList* self, int elements[], int count, int index) {
@@ -327,36 +386,39 @@ bool add_all_impl(LinkedList* self, int elements[], int count, int index) {
         return false;
     }
 
+    if (abs(index) >= self->size) {
+	    printf("Index selected is greater than the total size of the Linked List!\n!");
+	    return false;
+    }
+
+    if (index < 0) {
+	    index = self->size + index;
+    }
+
     Node* pointer = self->head;
     int counter = 0;
-    while (pointer->next != NULL) {
+    while (counter < index) {
         pointer = pointer->next;
+	counter++;
     }
 
-    Node* start = (Node*)malloc(sizeof(Node));
-    if (start == NULL) {
-        printf("Error during the allocation of memory for the list of blocks, at the beginning\n");
-        return false;
-    }
-    start->next = NULL;
-    start->value = elements[0];
-
-    Node*pointer2 = start;
-    for (int i = 1; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         Node* newNode = (Node*)malloc(sizeof(Node));
         if (start == NULL) {
             printf("Error during the allocation of memory for the list of blocks\n");
+	    self->size += i;
             return false;
         }
-        newNode->next = NULL;
+        newNode->next = pointer->next;
         newNode->value = elements[i];
+        pointer->next = newNode;
 
-        pointer2->next = newNode;
+	if (newNode->next == NULL) {
+		self->tail = newNode;
+	}
+
+	pointer = pointer->next;
     }
-
-    Node* tmp = pointer->next;
-    pointer->next = start;
-    pointer2->next = tmp;
 
     self->size += count;
     return true;
@@ -368,21 +430,28 @@ bool retain_all_impl(LinkedList* self, int elements[], int count) {
         return false;
     }
 
-    Node* pointer = self->head;
     int counter = 0;
-    while (pointer->next == NULL) {
+    Node* pointer = self->head;
+    while (pointer != NULL) {
+        bool found = false;
         for (int i = 0; i < count; i++) {
             if (elements[i] == pointer->value) {
-                if (!self->remove_index(self, counter)) {
-                    printf("Error during removing index %i of the linked list", counter);
-                }
+                found = true;
+                break;
             }
         }
-        pointer = pointer->next;
-        counter++;
+        Node* next = pointer->next;  // save before potential removal
+        if (!found) {
+            if (!self->remove_index(self, counter)) {
+                printf("Error during removing index %i of the linked list\n", counter);
+                return false;
+            }
+            // don't increment counter since indices shifted down
+        } else {
+            counter++;
+        }
+        pointer = next;
     }
-
-    self->size -= count;
     return true;
 }
 
@@ -392,9 +461,18 @@ bool add_index_impl(LinkedList* self, int index, int value) {
         return false;
     }
 
+    if (abs(index) >= self->size) {
+	    printf("Index given greater the the size of the Linked List!\n");
+	    return false;
+    }
+
+    if (index < 0) {
+	    index += self->size;
+    }
+
     Node* pointer = self->head;
     int counter = 0;
-    while (pointer->next != NULL && counter < index) {
+    while (counter < index - 1) {
         pointer = pointer->next;
         counter++;
     }
@@ -412,6 +490,10 @@ bool add_index_impl(LinkedList* self, int index, int value) {
     pointer->next = newNode;
     newNode->next = tmp;
 
+    if (newNode->next == NULL) {
+	    self->tail = NewNode;
+    }
+
     self->size++;
     return true;
 }
@@ -422,15 +504,37 @@ bool remove_index_impl(LinkedList* self, int index) {
         return false;
     }
 
-    Node* pointer = self->head;
-    int counter = 0;
-    while (pointer->next != NULL && counter < index) {
-        pointer = pointer->next;
+    if (abs(index) >= self->size) {
+	    printf("Index given greater than the size of the Linked List!\n");
+	    return false;
     }
 
-    Node* tmp = pointer->next->next;
-    free(pointer->next);
-    pointer->next = tmp;
+    if (index < 0) {
+	    index += self->size;
+    }
+
+    Node* toFree;
+    if (index == 0) {
+     	   toFree = self->head;
+        	self->head = self->head->next;
+      	   if (self->head == NULL) {
+            self->tail = NULL;  // list is now empty
+           }
+        free(toFree);
+    } else {
+        Node* pointer = self->head;
+        int counter = 0;
+        while (counter < index - 1) {
+            pointer = pointer->next;
+            counter++;
+        }
+        toFree = pointer->next;
+        pointer->next = toFree->next;
+        if (pointer->next == NULL) {
+            self->tail = pointer;
+        }
+        free(toFree);
+    }
 
     self->size--;
     return true;
@@ -442,10 +546,19 @@ bool set_index_impl(LinkedList* self, int index, int value) {
         return false;
     }
 
+    if (abs(index) >= self->size) {
+	    printf("Index given greater than the total size of the Linked List!\n");
+	    return false;
+    } 
+
+    if (index < 0) {
+	    index += self->size;
+    }
+
     Node* pointer = self->head;
     int counter = 0;
     while (counter < index) {
-        counter += 1;
+        counter++;
         pointer = pointer->next;
     }
 
@@ -459,6 +572,18 @@ bool swap_elements_impl(LinkedList* self, int index1, int index2) {
         return false;
     }
 
+    if (!check_and_normalize(index1, self->size, index1)) {
+	    return false;
+    }
+
+    if (!check_and_normalize(index2, self->size, index2)) {
+	    return false;
+    }
+
+    if (index1 == index2) {
+	    return true; //nothing to do
+    }
+
     Node* pointer = self->head;
     int counter = 0;
     while (counter < index1) {
@@ -467,6 +592,8 @@ bool swap_elements_impl(LinkedList* self, int index1, int index2) {
     }
     int value = pointer->value;
 
+    pointer = self->head;
+    counter = 0;
     while (counter < index2) {
         counter += 1;
         pointer = pointer->next;

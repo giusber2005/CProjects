@@ -1,2 +1,8 @@
 THINGS TO ADD
-    add functions for each structure to generate random values
+    -add functions for each structure to generate random values
+	
+    -add the usage of check_and_normalize to LinkedList.c for clarity
+    -adjust all methods of LinkedList
+    -generate tests; generate an abstract version of it
+
+    -terminate other two set of libraries (with tests and abstract versions)

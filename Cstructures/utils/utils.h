@@ -9,3 +9,4 @@
 #define POOL 100
 
 int find_min(Node* bin);
+int check_and_normalize(int index);

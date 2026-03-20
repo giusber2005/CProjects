@@ -56,7 +56,7 @@ int main(int argc, const char *argv[]) {
 
     uint8_t (*agentsColors)[4] = generate_colors(num_agents);
 
-    SDL_Window *window = SDL_CreateWindow("Random Walks", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("Random Walks", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     int app_running = 1;
